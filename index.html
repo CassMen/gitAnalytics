@@ -1,0 +1,169 @@
+ <!DOCTYPE html>
+<html>
+	<head>
+		<title>Git Analytics</title>
+		<meta name="description" content="Simple prototype dashboard to exhibit Git analytics data.">
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+		
+		
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		
+		<script src="dataset.js"></script>
+		
+	</head>
+	<body>
+	
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12 text-center mt-4 mb-2">
+					<h1>Commit charts</h1>
+				</div>
+			</div>
+			
+			
+			<div class="row">
+				<div class="col-sm-10 col-lg-5 offset-sm-1 text-center">
+					<h2>By month</h2>
+					<canvas id="monthly"></canvas>
+				</div>
+				
+				<div class="col-sm-10 col-lg-5 offset-sm-1 offset-lg-0 text-center mt-sm-5 mt-lg-0">
+					<h2>By day of month</h2>
+					<canvas id="dayMonth"></canvas>
+				</div>
+			</div>
+			
+			
+			<div class="row mt-5 mb-5">
+				<div class="col-sm-10 col-lg-5 offset-sm-1 text-center">
+					<h2>By weekday</h2>
+					<canvas id="weekly"></canvas>
+				</div>
+				
+				<div class="col-sm-10 col-lg-5 offset-sm-1 offset-lg-0 text-center mt-sm-5 mt-lg-0">
+					<h2>By hour</h2>
+					<canvas id="hourly"></canvas>
+				</div>
+			</div>
+			
+		</div>
+
+		
+		<script>
+
+			// Pulling data from JSON dataset.
+			const monthly = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+			const weekly = [ 0, 0, 0, 0, 0, 0, 0 ];
+			const hourly = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+			const dayMonth = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+			
+			for (let i = 0; i < dataset.length; i++) {
+				let data = new Date(dataset[i].data);
+				monthly[data.getMonth()] += 1;
+				weekly[data.getDay()] += 1;
+				hourly[data.getHours()] += 1;
+				dayMonth[data.getDate() - 1] += 1;
+			}
+			
+			
+			// Configuration for charts.
+			chartObjects = [
+				{
+					"color": "#1f21ab",
+					"areaColor": "#d5bfff",
+					"labels": [
+						//'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 						
+						//'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+						'January', 'February', 'March', 'April', 'May', 'June', 
+						'July', 'August', 'September', 'October', 'November', 'December' 
+					],
+					"dataset": monthly,
+					"elementId": "monthly"
+				},
+				
+				{
+					"color": "#ffa600",
+					"areaColor": "#fce8bc",
+					"labels": [
+						'01', '02', '03', '04', '05', '06', '07', '08', '09', '10', 
+						'11', '12', '13', '14', '15', '16', '17', '18', '19', '20',
+						'21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'
+					],
+					"dataset": dayMonth,
+					"elementId": "dayMonth"
+				},
+				
+				{
+					"color": "#5fd009",
+					"areaColor": "#cefcad",
+					"labels": [
+						//'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
+						'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+					],
+					"dataset": weekly,
+					"elementId": "weekly"
+				},
+				
+				{
+					"color": "#ff4047",
+					"areaColor": "#ffd5ce",
+					"labels": [
+						'0', '1', '2', '3', '4', '5', '6',
+						'7', '8', '9', '10', '11', '12', '13',
+						'14', '15', '16', '17', '18', '19', '20',
+						'21', '22', '23'
+					],
+					"dataset": hourly,
+					"elementId": "hourly"
+				}
+			
+			];
+			
+			
+			// Initializing charts.
+			for (let j = 0; j < chartObjects.length; j++) {
+				let data = {
+					labels: chartObjects[j].labels,
+					datasets: [{
+						label: 'Commit quantity',
+						backgroundColor: chartObjects[j].color,
+						borderColor: chartObjects[j].color,
+						data: chartObjects[j].dataset,
+						fill: {
+							target: 'origin',
+							above: chartObjects[j].areaColor,
+						}
+					}]
+				};
+				let config = {
+					type: 'line',
+					data: data,
+					options: {
+						scales: {
+							y: {
+								ticks: {
+									precision: 0
+								},
+								beginAtZero: true
+							}
+						}
+					}
+				};
+
+				new Chart(
+					document.getElementById(chartObjects[j].elementId),
+					config
+				);
+			}
+			
+			
+		</script>
+
+	</body>
+</html> 
